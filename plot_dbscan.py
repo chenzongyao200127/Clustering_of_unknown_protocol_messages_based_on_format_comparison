@@ -52,7 +52,6 @@ from sklearn import metrics
 db = DBSCAN(eps=0.3, min_samples=10).fit(X)
 labels = db.labels_
 
-
 # Number of clusters in labels, ignoring noise if present.
 n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 n_noise_ = list(labels).count(-1)

@@ -128,7 +128,7 @@ def main():
     修改参数取样数量 和 数据包slice长度
     '''    
     head_length = 20
-    sample_nums = 1024
+    sample_nums = 60
 
     for file_name in file_name_list:
         last_directory = get_last_directory(file_name)
@@ -224,9 +224,10 @@ def main():
     print("Estimated number of clusters: %d" % n_clusters_)
     print("Estimated number of noise points: %d" % n_noise_)
     
-    print(f"Homogeneity: {metrics.homogeneity_score(labels_true, labels):.3f}")
-    print(f"Completeness: {metrics.completeness_score(labels_true, labels):.3f}")
-    print(f"V-measure: {metrics.v_measure_score(labels_true, labels):.3f}")
+    # 同质性（hom.）、完整性（com.）、V-度量（v.）、FMI和覆盖率（cov.）
+    print(f"Homogeneity(同质性): {metrics.homogeneity_score(labels_true, labels):.3f}")
+    print(f"Completeness(完整性): {metrics.completeness_score(labels_true, labels):.3f}")
+    print(f"V-measure(V-度量): {metrics.v_measure_score(labels_true, labels):.3f}")
     print(f"Adjusted Rand Index: {metrics.adjusted_rand_score(labels_true, labels):.3f}")
     print(
         "Adjusted Mutual Information:"
@@ -274,7 +275,61 @@ def main():
     plt.savefig("cluster_sample.png")  # 保存图片到文件
 
 
+    from scipy.spatial.distance import pdist
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from sklearn_extra.cluster import KMedoids
+    from sklearn import metrics
 
+    # 计算距离矩阵
+    distance_matrix = pdist(MFD_matrix)
+
+    # UPGMA 聚类
+    Z = linkage(distance_matrix, method='average')
+    num_clusters = len(protocol_to_label_map)  #更改聚类数量
+    labels_upgma = fcluster(Z, num_clusters, criterion='maxclust') - 1  # 减1以使标签从0开始
+
+    # PAM 聚类
+    kmedoids = KMedoids(n_clusters=num_clusters, init='k-medoids++', random_state=42)
+    labels_pam = kmedoids.fit_predict(MFD_matrix)
+    
+    # 评价指标 - 同质性、完整性、V-度量、FMI 和覆盖率
+    hom_upgma, com_upgma, v_upgma = metrics.homogeneity_completeness_v_measure(labels_true, labels_upgma)
+    fmi_upgma = metrics.fowlkes_mallows_score(labels_true, labels_upgma)
+    cov_upgma = np.mean(labels_upgma == labels_true)
+
+    hom_pam, com_pam, v_pam = metrics.homogeneity_completeness_v_measure(labels_true, labels_pam)
+    fmi_pam = metrics.fowlkes_mallows_score(labels_true, labels_pam)
+    cov_pam = np.mean(labels_pam == labels_true)
+
+    print("UPGMA 聚类结果：")
+    print("同质性（homogeneity）：", hom_upgma)
+    print("完整性（completeness）：", com_upgma)
+    print("V-度量（v-measure）：", v_upgma)
+    print("FMI（Fowlkes-Mallows score）：", fmi_upgma)
+    print("覆盖率（coverage）：", cov_upgma)
+
+    print("\nPAM 聚类结果：")
+    print("同质性（homogeneity）：", hom_pam)
+    print("完整性（completeness）：", com_pam)
+    print("V-度量（v-measure）：", v_pam)
+    print("FMI（Fowlkes-Mallows score）：", fmi_pam)
+    print("覆盖率（coverage）：", cov_pam)
+    
+
+    # # 评价指标 - 调整兰德指数（ARI）和调整互信息（AMI）
+    # ari_upgma = metrics.adjusted_rand_score(labels_true, labels_upgma)
+    # ami_upgma = metrics.adjusted_mutual_info_score(labels_true, labels_upgma)
+
+    # ari_pam = metrics.adjusted_rand_score(labels_true, labels_pam)
+    # ami_pam = metrics.adjusted_mutual_info_score(labels_true, labels_pam)
+
+    # print("UPGMA 聚类结果：")
+    # print("调整兰德指数（ARI）：", ari_upgma)
+    # print("调整互信息（AMI）：", ami_upgma)
+
+    # print("\nPAM 聚类结果：")
+    # print("调整兰德指数（ARI）：", ari_pam)
+    # print("调整互信息（AMI）：", ami_pam)
     
     
     
