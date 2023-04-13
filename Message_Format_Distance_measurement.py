@@ -64,7 +64,7 @@ def calculate_tfd_matrix(message1_attribute_sets, message2_attribute_sets):
     
     return tfd_matrix
 
-def print_tfd_matrix(tfd_matrix):
+def print_matrix(tfd_matrix):
     print("Token Format Distance Matrix:")
     for row in tfd_matrix:
         # print([round(x, 2) for x in row])
@@ -112,7 +112,7 @@ def main():
     message2_attribute_sets = generate_attribute_sets(message2)
 
     tfd_matrix = calculate_tfd_matrix(message1_attribute_sets, message2_attribute_sets)
-    print_tfd_matrix(tfd_matrix)
+    print_matrix(tfd_matrix)
     
     distance = token_based_distance(message1, message2)
     print("MFD between message1 and message2:", distance)
