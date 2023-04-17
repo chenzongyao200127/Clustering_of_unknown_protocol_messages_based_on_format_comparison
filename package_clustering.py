@@ -58,7 +58,8 @@ def select_random_packets(protocols: Dict, num_packets: int = 1024, head_lngth: 
 def get_first_n_bytes(packet_data, n):
     try:
         if n > len(packet_data):
-            raise ValueError("n is greater than the length of the packet data")
+            # raise ValueError("n is greater than the length of the packet data")
+            first_n_bytes = packet_data
 
         # 获取前n个字节
         first_n_bytes = packet_data[:n]
@@ -97,13 +98,13 @@ def process_pcap_file(file_name, packge_dict):
                 if ip.v == 4:
                     if ip.p == dpkt.ip.IP_PROTO_TCP:
                         tcp = ip.data
-                        packge_dict[str(last_directory)].append(tcp)
+                        packge_dict[str(last_directory)].append(tcp.data)
                     elif ip.p == dpkt.ip.IP_PROTO_UDP:
                         udp = ip.data
 
                         if (udp.sport == 53) or (udp.dport == 53):
                             continue
-                        packge_dict[str(last_directory)].append(udp)
+                        packge_dict[str(last_directory)].append(udp.data)
                 else:
                     continue
     except Exception as e:
@@ -128,7 +129,7 @@ def main():
     修改参数取样数量 和 数据包slice长度
     '''    
     head_length = 20
-    sample_nums = 60
+    sample_nums = 1024
 
     for file_name in file_name_list:
         last_directory = get_last_directory(file_name)
@@ -206,7 +207,7 @@ def main():
     '''
     DBSCAN 聚类 调整参数
     '''
-    db = DBSCAN(eps=2.4, min_samples=3).fit(MFD_matrix)
+    db = DBSCAN(eps=0.3, min_samples=10).fit(MFD_matrix)
     
     # db.labels_ 属性包含每个样本的聚类标签。噪声点将被赋予标签 -1
     labels = db.labels_
